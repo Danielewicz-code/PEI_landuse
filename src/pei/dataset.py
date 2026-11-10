@@ -24,8 +24,9 @@ class ClearLandDataset(Dataset):
     def __init__(self, root, class_ids=(1,), image_ext=".tif", augment=True,
                  include_negatives=False, names: list[str] | None = None):
         """
-        include_negatives: keep images that have NO label file (forest, town, water...).
-            False = old behaviour. True lets the model learn what is NOT clear land.
+        include_negatives: also keep images that have NO label file at all.
+            Images with an (all-zero) label raster are always kept — that's how the
+            island-wide non-field data is used. False = old behaviour.
         names: restrict to these file names (used for the frozen split).
         """
         self.root = Path(root)

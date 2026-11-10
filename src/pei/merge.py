@@ -1,6 +1,10 @@
-"""Turn raw per-tile detections into one clean, non-overlapping field layer.
+"""Turn raw per-tile detections into one clean field layer.
 
-Pipeline (each step switchable in config `merge:`):
+merge.method:
+  legacy              -> the 1968 notebook logic below (unchanged)
+  hedgerow_watershed  -> pei.segment (markers never unioned, boundaries on hedgerows)
+
+Legacy pipeline:
   0. (optional) core ownership filter — drop overlap duplicates up front
   1. R-tree instance merge — union detections that overlap > swallow_threshold
   2. dissolve into connected 'basins'
@@ -96,13 +100,30 @@ def _watershed_basin(args):
         if poly.is_valid and poly.area > p["min_area_pre"]:
             s = poly.buffer(-p["final_shrink"]) if p["final_shrink"] else poly
             if s.is_valid and not s.is_empty:
-                parts = s.geoms if isinstance(s, MultiPolygon) else [s]
-                out.extend(q for q in parts if q.area > p["min_area_final"])
+                if isinstance(s, MultiPolygon):   # exactly as the 1968 notebook
+                    out.extend(q for q in s.geoms if q.area > p["min_area_final"])
+                else:
+                    out.append(s)
     return out
 
 
-def merge_detections(cfg, raw_gdf, run_dir, pixel_size):
-    """raw_gdf: output of infer.load_raw_detections. pixel_size: (px_w, px_h) in map units."""
+def merge_detections(cfg, raw_gdf, run_dir, raster_path):
+    """raw_gdf: output of infer.load_raw_detections. raster_path: the raster inference ran on."""
+    import rasterio
+
+    method = cfg["merge"].get("method", "legacy")
+    log(run_dir, f"Merge method: {method}")
+    if method == "hedgerow_watershed":
+        from .segment import separate_fields
+        return separate_fields(cfg, raw_gdf, run_dir, raster_path)
+    if method != "legacy":
+        raise ValueError(f"unknown merge.method '{method}'")
+    with rasterio.open(raster_path) as src:
+        pixel_size = (src.transform[0], -src.transform[4])
+    return _legacy(cfg, raw_gdf, run_dir, pixel_size)
+
+
+def _legacy(cfg, raw_gdf, run_dir, pixel_size):
     import geopandas as gpd
     from rtree import index
     from shapely.geometry import Polygon

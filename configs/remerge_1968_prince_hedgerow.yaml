@@ -1,0 +1,11 @@
+# Re-merge the EXISTING 1968 Prince raw detections with the new method — no GPU needed.
+# Compare in ArcGIS against the delivered 1968 layer, especially the merged-field spots.
+extends: base.yaml
+run:
+  name: 1968_prince_hedgerow
+  operator: nikolai
+paths:
+  input_raster: "{root}/data/raw/1968/whole_prince.tif"
+  raw_detections: "{root}/data/legacy/prince_raw_inference_backup.geojson"
+merge:
+  method: hedgerow_watershed

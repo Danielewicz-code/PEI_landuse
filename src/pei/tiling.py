@@ -44,8 +44,11 @@ def _core_bounds(starts: list[int], i: int, tile: int, length: int) -> tuple[int
     return lo, hi
 
 
-def make_grid(width: int, height: int, tile: int, overlap: float) -> list[Tile]:
-    stride = max(1, int(tile * (1.0 - overlap)))
+def make_grid(width: int, height: int, tile: int, overlap: float | None = None,
+              stride: int | None = None) -> list[Tile]:
+    """Give either `overlap` (fraction of tile) or an exact `stride` in pixels."""
+    if stride is None:
+        stride = max(1, int(round(tile * (1.0 - overlap))))
     rows, cols = _starts(height, tile, stride), _starts(width, tile, stride)
     tiles = []
     for i, r in enumerate(rows):

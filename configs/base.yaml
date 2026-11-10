@@ -31,27 +31,46 @@ tiling:
 
 inference:
   conf_threshold: 0.50
-  mask_threshold: 0.65   # the 1968 run used 0.65 (hard-coded in the loop, config said 0.50)
+  mask_threshold: 0.65   # value actually used in the 1968 inference loop
   erosion_kernel: 5      # 0 = off
   erosion_iterations: 1
-  nodata_values: [0]
+  nodata_values: [0]      # black = corrupted / empty -> tile skipped (also avoids water, saves time)
   max_nodata_ratio: 0.25
   min_polygon_area: 500  # map units² (m²)
   batch_size: 4
   copy_to_local: true    # copy raster to Colab disk first (Drive random reads are slow)
 
 merge:
-  core_ownership: false  # NEW, off = 1968 behaviour. Test on 2020 before switching on.
+  method: legacy         # legacy (1968 notebook) | hedgerow_watershed (pei/segment.py)
+  final_shrink: 2.0      # m, strips hedgerow/edge pixels so each polygon is the field itself
+  min_area_final: 1000
+  simplify_tolerance: 0  # m; 0 = off (removes pixel stair-steps if > 0)
+  workers: null          # null = all Colab CPU cores
+
+  # --- legacy only ---
+  core_ownership: false
   min_area_rtree: 1000
   swallow_threshold: 0.25
   watershed: true
   pad: 10.0
   marker_shrink: 3.0
-  final_shrink: 2.0      # NOTE: shrinks every field edge 2 m -> area is biased low
   min_area_pre: 500
-  min_area_final: 1000
-  simplify_tolerance: 0  # metres; 0 = off (removes pixel stair-steps if > 0)
-  workers: null          # null = all CPU cores
+
+  # --- hedgerow_watershed only (tune with notebooks/05_tune_merge) ---
+  hedgerow:
+    block_core: 3072     # px owned per block
+    block_halo: 1024     # px context each side (> half the biggest field)
+    marker_shrink: 3.0   # m, core of each detection used as a seed
+    min_marker_keep: 0.3 # drop a seed if a better detection covers > 70% of it (duplicates)
+    smooth_sigma: 1.5    # px, denoise before finding lines
+    line_radius_px: 6    # ~ half hedgerow width in px
+    w_dark: 1.0          # weight: dark lines (hedgerows, tree rows)
+    w_light: 0.5         # weight: light lines (roads, lanes)
+    w_grad: 0.5          # weight: any sharp edge
+    w_dist: 0.3          # weight: shape distance (tiebreak where image shows nothing)
+    dist_scale_px: 60
+    rag_merge: true      # re-join segments with no hedgerow between them (tile-cut fields)
+    rag_threshold: 0.30  # 0..1; higher = joins more, lower = splits more
 
 evaluation:
   iou_match: 0.5
@@ -60,7 +79,7 @@ training:
   seed: 42
   val_fraction: 0.15
   class_ids: [1]
-  include_negatives: false
+  include_negatives: false   # also use images with NO label file (empty label rasters are always used)
   batch_size: 2
   num_workers: 2
   select_by: val_loss    # or "f1" (picks the checkpoint that actually maps best)

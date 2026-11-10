@@ -8,4 +8,4 @@ run:
 paths:
   input_raster: "{root}/data/interim/2020/prince_2020_gray.tif"
 merge:
-  core_ownership: true    # experiment — compare against a run with false
+  method: hedgerow_watershed

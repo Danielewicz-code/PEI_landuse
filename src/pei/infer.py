@@ -29,6 +29,12 @@ def _maybe_local_copy(path: Path, enabled: bool, run_dir) -> Path:
     return local
 
 
+def resolve_raster(cfg, run_dir):
+    """The raster this run works on (local copy if copy_to_local)."""
+    return _maybe_local_copy(Path(cfg["paths"]["input_raster"]),
+                             cfg["inference"].get("copy_to_local", False), run_dir)
+
+
 def _mask_to_records(binary, score, tile: Tile, transform, img_w, img_h, min_area, raw_mask):
     import rasterio.features
     from shapely.geometry import shape
@@ -128,10 +134,14 @@ def run_inference(cfg, model, run_dir, device, raster_path=None):
     return out_dir
 
 
-def load_raw_detections(run_dir):
+def load_raw_detections(run_dir, path=None):
+    """Raw detections of this run, or an existing file (`paths.raw_detections`),
+    e.g. the old prince_raw_inference_backup.geojson, to re-merge without the GPU."""
     import geopandas as gpd
     import pandas as pd
 
+    if path:
+        return gpd.read_file(path)
     files = sorted((Path(run_dir) / "tiles").glob("*.gpkg"))
     if not files:
         raise FileNotFoundError("No tile outputs found — run inference first.")
