@@ -1,0 +1,23 @@
+# ---- NEVER COMMIT DATA (sensitive) ----
+*.tif
+*.tiff
+*.vrt
+*.gpkg
+*.geojson
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.gdb/
+*.pth
+*.pt
+*.zip
+data/
+runs/
+models/
+# ---- python / colab ----
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env

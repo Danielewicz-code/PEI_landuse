@@ -1,0 +1,14 @@
+# Reproduces the 1968 fine-tune for border delimitation.
+extends: base.yaml
+run:
+  name: finetune_1968
+  operator: nikolai
+training:
+  dataset: 1968_finetune
+  init_from: "{root}/models/pei_1968_best_maskrcnn.pth"
+  output_name: pei_1968_finetuned_maskrcnn
+  epochs: 30
+  lr: 0.00025
+  weight_decay: 0.001
+  lr_step: 8
+  lr_gamma: 0.5

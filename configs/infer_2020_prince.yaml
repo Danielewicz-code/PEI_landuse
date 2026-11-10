@@ -1,0 +1,11 @@
+# 2020 Prince County, using the 1968 model on prepared grayscale.
+extends: base.yaml
+project:
+  year: 2020
+run:
+  name: 2020_prince_v1
+  operator: nikolai
+paths:
+  input_raster: "{root}/data/interim/2020/prince_2020_gray.tif"
+merge:
+  core_ownership: true    # experiment — compare against a run with false

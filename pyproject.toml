@@ -1,0 +1,8 @@
+[project]
+name = "pei"
+version = "0.1.0"
+description = "PEI land-use mapping pipeline (clear land / fields, 1968 & 2020)"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+where = ["src"]

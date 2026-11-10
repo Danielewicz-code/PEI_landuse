@@ -1,0 +1,66 @@
+# =====================================================================
+# BASE CONFIG — shared by every run. Don't put run-specific stuff here.
+# Changing a value here changes EVERY future run: log it in CHANGELOG.md.
+# =====================================================================
+
+project:
+  year: 1968
+  crs: null            # e.g. "EPSG:2954" (NAD83(CSRS) / PEI Stereographic) — confirm from your rasters, then set
+  county_field: NAME   # attribute holding county name in paths.counties
+
+paths:
+  root: /content/drive/MyDrive/pei_landuse      # the ONE shared Drive folder
+  raw: "{root}/data/raw"                         # read-only originals
+  interim: "{root}/data/interim"                 # prepared rasters (grayscale/resampled)
+  training_data: "{root}/data/training"          # <dataset>/images, <dataset>/labels/1
+  models: "{root}/models"
+  runs: "{root}/runs"
+  counties: "{root}/data/reference/pei_counties.gpkg"
+  input_raster: null                             # set per run
+
+model:
+  num_classes: 2
+  min_size: 800          # torchvision default; tiles are resized to this internally
+  max_size: 1333
+  detections_per_img: 100
+  checkpoint: "{root}/models/pei_1968_finetuned_maskrcnn.pth"
+
+tiling:
+  tile_size: 1024
+  overlap: 0.5
+
+inference:
+  conf_threshold: 0.50
+  mask_threshold: 0.65   # the 1968 run used 0.65 (hard-coded in the loop, config said 0.50)
+  erosion_kernel: 5      # 0 = off
+  erosion_iterations: 1
+  nodata_values: [0]
+  max_nodata_ratio: 0.25
+  min_polygon_area: 500  # map units² (m²)
+  batch_size: 4
+  copy_to_local: true    # copy raster to Colab disk first (Drive random reads are slow)
+
+merge:
+  core_ownership: false  # NEW, off = 1968 behaviour. Test on 2020 before switching on.
+  min_area_rtree: 1000
+  swallow_threshold: 0.25
+  watershed: true
+  pad: 10.0
+  marker_shrink: 3.0
+  final_shrink: 2.0      # NOTE: shrinks every field edge 2 m -> area is biased low
+  min_area_pre: 500
+  min_area_final: 1000
+  simplify_tolerance: 0  # metres; 0 = off (removes pixel stair-steps if > 0)
+  workers: null          # null = all CPU cores
+
+evaluation:
+  iou_match: 0.5
+
+training:
+  seed: 42
+  val_fraction: 0.15
+  class_ids: [1]
+  include_negatives: false
+  batch_size: 2
+  num_workers: 2
+  select_by: val_loss    # or "f1" (picks the checkpoint that actually maps best)

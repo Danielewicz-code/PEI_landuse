@@ -1,0 +1,14 @@
+# Reproduces the original 1968 base training (cell "first_training").
+extends: base.yaml
+run:
+  name: train_1968_base
+  operator: nikolai
+training:
+  dataset: 1968_first_training
+  init_from: coco
+  output_name: pei_1968_best_maskrcnn
+  epochs: 25
+  lr: 0.005
+  weight_decay: 0.0005
+  lr_step: 6
+  lr_gamma: 0.1

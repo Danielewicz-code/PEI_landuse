@@ -1,0 +1,12 @@
+# Turns a 2020 colour ortho into model-ready grayscale that looks like 1968.
+extends: base.yaml
+project:
+  year: 2020
+run:
+  name: prepare_2020_prince
+  operator: nikolai
+prepare:
+  source: "{root}/data/raw/2020/prince_2020.tif"
+  output: "{root}/data/interim/2020/prince_2020_gray.tif"
+  target_res: null        # set to the 1968 pixel size in metres (check src.res of the 1968 tif)
+  reference: "{root}/data/raw/1968/whole_prince.tif"   # histogram-match target; null = skip

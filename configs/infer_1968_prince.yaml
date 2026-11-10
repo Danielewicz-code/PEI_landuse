@@ -1,0 +1,7 @@
+# Reference run: the 1968 Prince County map, old behaviour.
+extends: base.yaml
+run:
+  name: 1968_prince
+  operator: nikolai
+paths:
+  input_raster: "{root}/data/raw/1968/whole_prince.tif"
